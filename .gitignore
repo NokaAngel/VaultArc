@@ -1,0 +1,60 @@
+## Build outputs
+[Bb]in/
+[Oo]bj/
+publish/
+
+## IDE / Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.slnx
+*.slnLaunch*
+
+## NuGet
+**/packages/
+*.nupkg
+**/project.lock.json
+**/project.fragment.lock.json
+
+## Rider
+.idea/
+
+## VS Code
+.vscode/
+
+## OS junk
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+._*
+
+## Installer output
+installer/output/
+
+## MSIX build layout (temporary staging)
+VaultArc.Packaging/layout/
+
+## MSIX output
+AppPackages/
+*.msix
+*.msixbundle
+*.appx
+*.appxbundle
+*.appxupload
+
+## Self-signed certs (never commit)
+*.pfx
+*.cer
+*.p12
+
+## Test results
+TestResults/
+*.trx
+
+## Misc
+*.log
+*.tmp
+*.bak

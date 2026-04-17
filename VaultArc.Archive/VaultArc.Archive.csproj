@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Konscious.Security.Cryptography.Argon2" Version="1.3.1" />
+    <PackageReference Include="SharpCompress" Version="0.39.0" />
+    <PackageReference Include="Sodium.Core" Version="1.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VaultArc.Core\VaultArc.Core.csproj" />
+    <ProjectReference Include="..\VaultArc.Models\VaultArc.Models.csproj" />
+    <ProjectReference Include="..\VaultArc.Security\VaultArc.Security.csproj" />
+  </ItemGroup>
+</Project>

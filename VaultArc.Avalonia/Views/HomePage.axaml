@@ -1,0 +1,103 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VaultArc.Avalonia.ViewModels"
+             x:Class="VaultArc.Avalonia.Views.HomePage"
+             x:DataType="vm:HomeViewModel">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="40,36,40,28" MaxWidth="880" Spacing="28" HorizontalAlignment="Left">
+
+            <StackPanel Spacing="12" HorizontalAlignment="Center">
+                <Image Width="96" Height="96" HorizontalAlignment="Center"
+                       Source="avares://VaultArc.Avalonia/Assets/VaultArcLogo.png" />
+                <TextBlock HorizontalAlignment="Center" FontSize="36" FontWeight="Bold" Text="VaultArc" />
+                <TextBlock HorizontalAlignment="Center" FontSize="15" Opacity="0.65" TextAlignment="Center" TextWrapping="WrapWithOverflow"
+                           Text="A modern cross-platform archive manager — compress, extract, browse, and secure your files." />
+                <TextBlock HorizontalAlignment="Center" FontSize="12" Opacity="0.45" Text="Drop an archive file anywhere to open it" />
+            </StackPanel>
+
+            <Grid ColumnDefinitions="*,14,*" RowDefinitions="Auto,14,Auto">
+                <Border Padding="22" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock FontSize="24" Foreground="{DynamicResource VaultArcPrimaryAccentBrush}" Text="📂" />
+                            <TextBlock FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" Text="Open Archive" />
+                        </StackPanel>
+                        <TextBlock FontSize="13" Opacity="0.72" TextWrapping="WrapWithOverflow"
+                                   Text="Browse and explore archive contents, preview files, extract, and manage entries." />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Padding="22" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock FontSize="24" Foreground="{DynamicResource VaultArcPrimaryAccentBrush}" Text="📦" />
+                            <TextBlock FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" Text="Create Archive" />
+                        </StackPanel>
+                        <TextBlock FontSize="13" Opacity="0.72" TextWrapping="WrapWithOverflow"
+                                   Text="Pack files and folders into ZIP, TAR, or encrypted .arc archives." />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Row="2" Padding="22" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock FontSize="24" Foreground="{DynamicResource VaultArcPrimaryAccentBrush}" Text="⏳" />
+                            <TextBlock FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" Text="Job Queue" />
+                        </StackPanel>
+                        <TextBlock FontSize="13" Opacity="0.72" TextWrapping="WrapWithOverflow"
+                                   Text="Monitor compress and extract jobs with live progress tracking." />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Row="2" Grid.Column="2" Padding="22" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock FontSize="24" Foreground="{DynamicResource VaultArcPrimaryAccentBrush}" Text="#️⃣" />
+                            <TextBlock FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" Text="Hash Tools" />
+                        </StackPanel>
+                        <TextBlock FontSize="13" Opacity="0.72" TextWrapping="WrapWithOverflow"
+                                   Text="Compute and compare file checksums with MD5, SHA-256, or SHA-512." />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Border Padding="22" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}"
+                    IsVisible="{Binding RecentArchives.Count, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <StackPanel Spacing="10">
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Text="Recent Archives" />
+                    <ItemsControl ItemsSource="{Binding RecentArchives}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                        Padding="10,6" Margin="0,1"
+                                        Command="{Binding $parent[UserControl].((vm:HomeViewModel)DataContext).RecentArchives}"
+                                        Tag="{Binding}">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock FontSize="14" Opacity="0.6" Text="📁" />
+                                        <TextBlock FontSize="13" Text="{Binding}" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border Padding="18" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="6">
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Text="Supported formats" />
+                    <TextBlock FontSize="13" Opacity="0.65"
+                               Text=".zip  .7z  .rar  .tar  .tar.gz  .tar.xz  .arc (VaultArc encrypted)" />
+                </StackPanel>
+            </Border>
+
+            <Border Padding="18" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="6">
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Text="Keyboard shortcuts" />
+                    <TextBlock FontSize="13" Opacity="0.65"
+                               Text="Ctrl+O  Browse archive  |  Ctrl+E  Extract destination  |  Ctrl+F  Search  |  F2  Rename  |  Del  Delete  |  Enter  Open" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

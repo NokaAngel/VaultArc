@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="VaultArc.App.Pages.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    AllowDrop="True"
+    DragOver="Page_DragOver"
+    Drop="Page_Drop">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Enabled">
+        <StackPanel Padding="40,36,40,28" MaxWidth="880" Spacing="28" HorizontalAlignment="Left">
+
+            <!-- Hero -->
+            <StackPanel Spacing="12" HorizontalAlignment="Center">
+                <Image Width="96" Height="96" HorizontalAlignment="Center" Source="ms-appx:///Assets/VaultArcLogo.png" />
+                <TextBlock HorizontalAlignment="Center" FontSize="36" FontWeight="Bold" Text="VaultArc" />
+                <TextBlock HorizontalAlignment="Center" FontSize="15" Opacity="0.65" TextAlignment="Center" TextWrapping="WrapWholeWords"
+                           Text="A modern archive manager for Windows — compress, extract, browse, and secure your files." />
+                <TextBlock HorizontalAlignment="Center" FontSize="12" Opacity="0.45" Text="Drop an archive file anywhere to open it" />
+            </StackPanel>
+
+            <!-- Feature cards -->
+            <Grid ColumnSpacing="14" RowSpacing="14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Border Padding="22" CornerRadius="10" Background="{ThemeResource VaultArcSurfaceBrush}">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <FontIcon FontSize="24" Glyph="&#xE8B7;" Foreground="{ThemeResource VaultArcPrimaryAccentBrush}" />
+                            <TextBlock FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" Text="Open Archive" />
+                        </StackPanel>
+                        <TextBlock FontSize="13" Opacity="0.72" TextWrapping="WrapWholeWords"
+                                   Text="Browse and explore archive contents, preview files, extract, and manage entries." />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Padding="22" CornerRadius="10" Background="{ThemeResource VaultArcSurfaceBrush}">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <FontIcon FontSize="24" Glyph="&#xE8A5;" Foreground="{ThemeResource VaultArcPrimaryAccentBrush}" />
+                            <TextBlock FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" Text="Create Archive" />
+                        </StackPanel>
+                        <TextBlock FontSize="13" Opacity="0.72" TextWrapping="WrapWholeWords"
+                                   Text="Pack files and folders into ZIP, TAR, or encrypted .arc archives." />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Row="1" Padding="22" CornerRadius="10" Background="{ThemeResource VaultArcSurfaceBrush}">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <FontIcon FontSize="24" Glyph="&#xE945;" Foreground="{ThemeResource VaultArcPrimaryAccentBrush}" />
+                            <TextBlock FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" Text="Job Queue" />
+                        </StackPanel>
+                        <TextBlock FontSize="13" Opacity="0.72" TextWrapping="WrapWholeWords"
+                                   Text="Monitor compress and extract jobs with live progress and Windows toast notifications." />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Row="1" Grid.Column="1" Padding="22" CornerRadius="10" Background="{ThemeResource VaultArcSurfaceBrush}">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <FontIcon FontSize="24" Glyph="&#xE8A1;" Foreground="{ThemeResource VaultArcPrimaryAccentBrush}" />
+                            <TextBlock FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" Text="Hash Tools" />
+                        </StackPanel>
+                        <TextBlock FontSize="13" Opacity="0.72" TextWrapping="WrapWholeWords"
+                                   Text="Compute and compare file checksums with MD5, SHA-256, or SHA-512." />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Recent archives -->
+            <Border Padding="22" CornerRadius="10" Background="{ThemeResource VaultArcSurfaceBrush}"
+                    Visibility="{x:Bind HasRecentArchives(ViewModel.RecentArchives.Count), Mode=OneWay}">
+                <StackPanel Spacing="10">
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Text="Recent Archives" />
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.RecentArchives, Mode=OneWay}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Button
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Padding="10,6"
+                                    Margin="0,1"
+                                    Click="RecentArchiveClicked"
+                                    Tag="{x:Bind}">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <FontIcon FontSize="14" Glyph="&#xE8B7;" Opacity="0.6" />
+                                        <TextBlock FontSize="13" Text="{x:Bind}" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Supported formats -->
+            <Border Padding="18" CornerRadius="10" Background="{ThemeResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="6">
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Text="Supported formats" />
+                    <TextBlock FontSize="13" Opacity="0.65"
+                               Text=".zip  .7z  .rar  .tar  .tar.gz  .tar.xz  .arc (VaultArc encrypted)" />
+                </StackPanel>
+            </Border>
+
+            <!-- Keyboard shortcuts -->
+            <Border Padding="18" CornerRadius="10" Background="{ThemeResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="6">
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Text="Keyboard shortcuts" />
+                    <TextBlock FontSize="13" Opacity="0.65"
+                               Text="Ctrl+O  Browse archive  |  Ctrl+E  Extract destination  |  Ctrl+F  Search  |  F2  Rename  |  Del  Delete  |  Enter  Open" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

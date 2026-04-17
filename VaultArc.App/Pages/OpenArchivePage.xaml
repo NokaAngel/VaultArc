@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="VaultArc.App.Pages.OpenArchivePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:VaultArc.Models"
+    xmlns:local="using:VaultArc.App.Pages"
+    AllowDrop="True"
+    DragOver="Page_DragOver"
+    Drop="Page_Drop"
+    KeyDown="Page_KeyDown">
+    <Grid RowSpacing="0" Background="{ThemeResource VaultArcBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Padding="20,16" Background="{ThemeResource VaultArcSurfaceBrush}">
+            <Grid RowSpacing="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Image Width="22" Height="22" Source="{x:Bind ViewModel.ArchiveIconPath, Mode=OneWay}" />
+                    <TextBox
+                        MinWidth="400"
+                        VerticalAlignment="Center"
+                        PlaceholderText="Archive path"
+                        Text="{x:Bind ViewModel.ArchivePath, Mode=TwoWay}" />
+                    <Button Click="BrowseClicked" ToolTipService.ToolTip="Browse for archive">
+                        <FontIcon FontSize="14" Glyph="&#xE8B7;" />
+                    </Button>
+                    <Button Click="OpenClicked" Style="{ThemeResource AccentButtonStyle}" ToolTipService.ToolTip="Open archive">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon FontSize="14" Glyph="&#xE8E5;" />
+                            <TextBlock Text="Open" />
+                        </StackPanel>
+                    </Button>
+                    <Button Click="IntegrityClicked" ToolTipService.ToolTip="Test archive integrity">
+                        <FontIcon FontSize="14" Glyph="&#xE9CE;" />
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="20">
+                    <TextBlock FontSize="12" Opacity="0.65">
+                        <Run Text="Entries:" />
+                        <Run FontWeight="SemiBold" Text="{x:Bind ViewModel.TotalEntryCount, Mode=OneWay}" />
+                    </TextBlock>
+                    <TextBlock FontSize="12" Opacity="0.65">
+                        <Run Text="Runnable:" />
+                        <Run FontWeight="SemiBold" Text="{x:Bind ViewModel.ExecutableCount, Mode=OneWay}" />
+                    </TextBlock>
+                    <TextBlock FontSize="12" Opacity="0.65">
+                        <Run Text="Location:" />
+                        <Run FontWeight="SemiBold" Text="{x:Bind ViewModel.CurrentFolderPath, Mode=OneWay}" />
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border
+            Grid.Row="1"
+            Padding="12,6"
+            Background="{ThemeResource VaultArcSurfaceBrush}"
+            BorderBrush="{ThemeResource VaultArcListAccentBrush}"
+            BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <Button
+                    Width="32" Height="28" Padding="0"
+                    Click="NavigateRootClicked"
+                    ToolTipService.ToolTip="Root">
+                    <FontIcon FontSize="14" Glyph="&#xE80F;" />
+                </Button>
+                <Button
+                    Width="32" Height="28" Padding="0"
+                    Click="NavigateUpClicked"
+                    IsEnabled="{x:Bind ViewModel.CanNavigateUp, Mode=OneWay}"
+                    ToolTipService.ToolTip="Up one level">
+                    <FontIcon FontSize="14" Glyph="&#xE74A;" />
+                </Button>
+                <Rectangle Width="1" Height="18" Margin="4,0" Fill="{ThemeResource VaultArcListAccentBrush}" />
+                <Button
+                    Height="28" Padding="8,0"
+                    Click="OpenSelectedClicked"
+                    IsEnabled="{x:Bind ViewModel.CanOpenSelected, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <FontIcon FontSize="13" Glyph="&#xE8E5;" />
+                        <TextBlock FontSize="12" Text="Open" />
+                    </StackPanel>
+                </Button>
+                <Button
+                    Height="28" Padding="8,0"
+                    Click="RunSelectedClicked"
+                    IsEnabled="{x:Bind ViewModel.CanRunSelected, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <FontIcon FontSize="13" Glyph="&#xE768;" />
+                        <TextBlock FontSize="12" Text="Run" />
+                    </StackPanel>
+                </Button>
+                <Button
+                    Height="28" Padding="8,0"
+                    Click="ViewTempFolderClicked">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <FontIcon FontSize="13" Glyph="&#xE838;" />
+                        <TextBlock FontSize="12" Text="Temp" />
+                    </StackPanel>
+                </Button>
+                <Button
+                    Width="32" Height="28" Padding="0"
+                    Click="RefreshClicked"
+                    ToolTipService.ToolTip="Refresh">
+                    <FontIcon FontSize="14" Glyph="&#xE72C;" />
+                </Button>
+                <Rectangle Width="1" Height="18" Margin="4,0" Fill="{ThemeResource VaultArcListAccentBrush}" />
+                <ScrollViewer HorizontalScrollMode="Enabled" HorizontalScrollBarVisibility="Auto" VerticalScrollMode="Disabled">
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.Breadcrumbs, Mode=OneWay}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="2" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:ArchiveBreadcrumb">
+                                <Button
+                                    Height="26"
+                                    Padding="8,0"
+                                    Click="BreadcrumbClicked"
+                                    Content="{x:Bind DisplayName}"
+                                    FontSize="12"
+                                    Tag="{x:Bind FolderPath}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="0" ColumnSpacing="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="300" />
+            </Grid.ColumnDefinitions>
+
+            <Grid RowSpacing="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border Padding="12,8" Background="{ThemeResource VaultArcSurfaceBrush}">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBox
+                            x:Name="SearchBox"
+                            MinWidth="200"
+                            PlaceholderText="Search entries..."
+                            Text="{x:Bind ViewModel.SearchText, Mode=TwoWay}" />
+                        <CheckBox
+                            Content="Executables only"
+                            IsChecked="{x:Bind ViewModel.ShowExecutablesOnly, Mode=TwoWay}"
+                            VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <Grid Grid.Row="1" Padding="12,6" ColumnSpacing="4" Background="{ThemeResource VaultArcListAccentBrush}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3*" />
+                        <ColumnDefinition Width="1*" />
+                        <ColumnDefinition Width="1.2*" />
+                        <ColumnDefinition Width="1.2*" />
+                        <ColumnDefinition Width="1.8*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock FontSize="12" FontWeight="SemiBold" Text="Name" />
+                    <TextBlock Grid.Column="1" FontSize="12" FontWeight="SemiBold" Text="Type" />
+                    <TextBlock Grid.Column="2" FontSize="12" FontWeight="SemiBold" Text="Size" />
+                    <TextBlock Grid.Column="3" FontSize="12" FontWeight="SemiBold" Text="Packed" />
+                    <TextBlock Grid.Column="4" FontSize="12" FontWeight="SemiBold" Text="Modified" />
+                </Grid>
+
+                <ListView
+                    Grid.Row="2"
+                    x:Name="EntriesList"
+                    Padding="4,0"
+                    Background="{ThemeResource VaultArcBackgroundBrush}"
+                    ItemsSource="{x:Bind ViewModel.FilteredItems, Mode=OneWay}"
+                    SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}"
+                    DoubleTapped="EntriesList_DoubleTapped"
+                    KeyDown="EntriesList_KeyDown">
+                    <ListView.ContextFlyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem Click="OpenSelectedClicked" Text="Open">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8E5;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Click="RunSelectedClicked" Text="Run">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE768;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Click="ViewTempFolderClicked" Text="Open temp location">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE838;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Click="CopyPathClicked" Text="Copy path">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem Click="RenameEntryClicked" Text="Rename (.arc)">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Click="DeleteEntryClicked" Text="Delete (.arc)">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem Click="IntegrityClicked" Text="Test archive">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE9CE;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                        </MenuFlyout>
+                    </ListView.ContextFlyout>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="models:ArchiveItem">
+                            <Grid Padding="6,4" ColumnSpacing="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="3*" />
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="1.2*" />
+                                    <ColumnDefinition Width="1.2*" />
+                                    <ColumnDefinition Width="1.8*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="{x:Bind local:OpenArchivePage.GetEntryIcon(FullPath, IsDirectory)}" Opacity="0.75" />
+                                    <TextBlock FontSize="13" Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" FontSize="13" Opacity="0.7" Text="{x:Bind ItemType}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontSize="13" Opacity="0.7" Text="{x:Bind Size}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="3" FontSize="13" Opacity="0.7" Text="{x:Bind CompressedSize}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="4" FontSize="13" Opacity="0.7" Text="{x:Bind ModifiedUtc}" VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+
+            <Border
+                Grid.Column="1"
+                Background="{ThemeResource VaultArcSurfaceBrush}"
+                BorderBrush="{ThemeResource VaultArcListAccentBrush}"
+                BorderThickness="1,0,0,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,12">
+                    <StackPanel Spacing="16">
+                        <!-- Details -->
+                        <StackPanel Spacing="8">
+                            <TextBlock FontSize="14" FontWeight="SemiBold" Text="Details" />
+                            <StackPanel Spacing="2">
+                                <TextBlock FontSize="12" Opacity="0.6" Text="Name" />
+                                <TextBlock FontSize="13" Text="{x:Bind ViewModel.SelectedDisplayName, Mode=OneWay}" TextWrapping="WrapWholeWords" />
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock FontSize="12" Opacity="0.6" Text="Type" />
+                                <TextBlock FontSize="13" Text="{x:Bind ViewModel.SelectedTypeLabel, Mode=OneWay}" />
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock FontSize="12" Opacity="0.6" Text="Size" />
+                                <TextBlock FontSize="13" Text="{x:Bind ViewModel.SelectedSizeLabel, Mode=OneWay}" />
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock FontSize="12" Opacity="0.6" Text="Modified" />
+                                <TextBlock FontSize="13" Text="{x:Bind ViewModel.SelectedModifiedLabel, Mode=OneWay}" />
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock FontSize="12" Opacity="0.6" Text="Path" />
+                                <TextBlock FontSize="12" Opacity="0.8" Text="{x:Bind ViewModel.SelectedFullPath, Mode=OneWay}" TextWrapping="WrapWholeWords" />
+                            </StackPanel>
+                            <Button Click="PreviewClicked" HorizontalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                    <FontIcon FontSize="13" Glyph="&#xE8A5;" />
+                                    <TextBlock FontSize="12" Text="Preview" />
+                                </StackPanel>
+                            </Button>
+                            <TextBox
+                                AcceptsReturn="True"
+                                IsReadOnly="True"
+                                MinHeight="120"
+                                Text="{x:Bind ViewModel.PreviewText, Mode=OneWay}"
+                                TextWrapping="Wrap"
+                                FontSize="12" />
+                        </StackPanel>
+
+                        <Rectangle Height="1" Fill="{ThemeResource VaultArcListAccentBrush}" />
+
+                        <!-- Extract -->
+                        <StackPanel Spacing="8">
+                            <TextBlock FontSize="14" FontWeight="SemiBold" Text="Extract Archive" />
+                            <TextBlock FontSize="12" Opacity="0.6" Text="Choose a destination folder and extract all entries." TextWrapping="WrapWholeWords" />
+                            <Grid ColumnSpacing="6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox
+                                    PlaceholderText="Destination folder"
+                                    Text="{x:Bind ViewModel.ExtractDestination, Mode=TwoWay}"
+                                    FontSize="12" />
+                                <Button Grid.Column="1" Click="BrowseExtractDestinationClicked" ToolTipService.ToolTip="Browse destination">
+                                    <FontIcon FontSize="13" Glyph="&#xE838;" />
+                                </Button>
+                            </Grid>
+                            <CheckBox
+                                Content="Overwrite existing files"
+                                FontSize="12"
+                                IsChecked="{x:Bind ViewModel.ExtractOverwrite, Mode=TwoWay}" />
+                            <Button
+                                Click="ExtractAllClicked"
+                                HorizontalAlignment="Stretch"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                IsEnabled="{x:Bind ViewModel.HasArchiveLoaded, Mode=OneWay}">
+                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                    <FontIcon FontSize="13" Glyph="&#xE896;" />
+                                    <TextBlock FontSize="12" Text="Extract All" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <Border
+            Grid.Row="3"
+            Padding="12,6"
+            Background="{ThemeResource VaultArcSurfaceBrush}"
+            BorderBrush="{ThemeResource VaultArcListAccentBrush}"
+            BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock FontSize="12" Opacity="0.7" VerticalAlignment="Center" Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="1" FontSize="12" Opacity="0.6" VerticalAlignment="Center" Text="{x:Bind ViewModel.StatusBarSummary, Mode=OneWay}" />
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

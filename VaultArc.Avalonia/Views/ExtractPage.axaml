@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VaultArc.Avalonia.ViewModels"
+             x:Class="VaultArc.Avalonia.Views.ExtractPage"
+             x:DataType="vm:ExtractViewModel">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="32,28,32,20" MaxWidth="700" HorizontalAlignment="Left" RowDefinitions="Auto,20,Auto,20,Auto,20,Auto">
+
+            <TextBlock FontSize="28" FontWeight="SemiBold" Text="Extract Archive" />
+
+            <Border Grid.Row="2" Padding="20" CornerRadius="8" Background="{DynamicResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="12">
+                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Source" />
+                    <TextBox Watermark="Archive path" Text="{Binding ArchivePath, Mode=TwoWay}" />
+                    <Button x:Name="BrowseArchiveBtn" Content="📂 Browse archive" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="4" Padding="20" CornerRadius="8" Background="{DynamicResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="12">
+                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Destination" />
+                    <TextBox Watermark="Output folder" Text="{Binding DestinationPath, Mode=TwoWay}" />
+                    <Button x:Name="BrowseDestBtn" Content="📁 Browse folder" />
+                    <CheckBox Content="Overwrite existing files" IsChecked="{Binding OverwriteExisting, Mode=TwoWay}" />
+                    <TextBlock FontSize="12" Opacity="0.65" Text="Password prompts appear only if the archive requires one." TextWrapping="WrapWithOverflow" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Grid.Row="6" Spacing="10">
+                <Button x:Name="QueueBtn" Classes="accent" Content="Queue extraction" />
+                <TextBlock FontSize="13" Opacity="0.75" Text="{Binding StatusMessage}" TextWrapping="WrapWithOverflow" />
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

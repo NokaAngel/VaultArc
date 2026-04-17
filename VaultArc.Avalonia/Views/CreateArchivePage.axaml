@@ -1,0 +1,58 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VaultArc.Avalonia.ViewModels"
+             x:Class="VaultArc.Avalonia.Views.CreateArchivePage"
+             x:DataType="vm:CreateArchiveViewModel">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="32,28,32,20" MaxWidth="700" HorizontalAlignment="Left" RowDefinitions="Auto,20,Auto,20,Auto,20,Auto,20,Auto">
+
+            <TextBlock FontSize="28" FontWeight="SemiBold" Text="Create Archive" />
+
+            <Border Grid.Row="2" Padding="20" CornerRadius="8" Background="{DynamicResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="12">
+                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Destination" />
+                    <TextBox Watermark="Output path (.zip, .tar, .tar.gz, .tar.xz, .arc)" Text="{Binding DestinationPath, Mode=TwoWay}" />
+                    <Button x:Name="BrowseDestBtn">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="📂 Browse" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="4" Padding="20" CornerRadius="8" Background="{DynamicResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="14">
+                    <Grid ColumnDefinitions="*,16,*">
+                        <StackPanel Spacing="4">
+                            <TextBlock FontSize="12" Text="Compression preset" />
+                            <ComboBox HorizontalAlignment="Stretch"
+                                      ItemsSource="{Binding Presets}" SelectedItem="{Binding Preset, Mode=TwoWay}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Spacing="4">
+                            <TextBlock FontSize="12" Text="Encryption (.arc only)" />
+                            <ComboBox HorizontalAlignment="Stretch"
+                                      ItemsSource="{Binding EncryptionProfiles}" SelectedItem="{Binding EncryptionProfile, Mode=TwoWay}" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="6" Padding="20" CornerRadius="8" Background="{DynamicResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="12">
+                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Input files" />
+                    <TextBlock FontSize="12" Opacity="0.65" Text="One file or folder path per line." TextWrapping="WrapWithOverflow" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="BrowseFolderBtn" Content="📁 Add folder" />
+                        <Button x:Name="BrowseFilesBtn" Content="📄 Add files" />
+                    </StackPanel>
+                    <TextBox AcceptsReturn="True" MinHeight="160" Text="{Binding InputPaths, Mode=TwoWay}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Grid.Row="8" Spacing="10">
+                <Button x:Name="QueueBtn" Classes="accent" Content="Queue compression" />
+                <TextBlock FontSize="13" Opacity="0.75" Text="{Binding StatusMessage}" TextWrapping="WrapWithOverflow" />
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

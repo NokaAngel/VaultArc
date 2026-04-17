@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  IgnorableNamespaces="uap uap3 rescap desktop">
+
+  <Identity
+    Name="VaultArc"
+    Publisher="CN=VaultArc"
+    Version="1.0.0.0"
+    ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>VaultArc</DisplayName>
+    <PublisherDisplayName>VaultArc</PublisherDisplayName>
+    <Logo>Images\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26226.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Applications>
+    <Application Id="VaultArc"
+      Executable="VaultArc.Avalonia.exe"
+      EntryPoint="Windows.FullTrustApplication">
+
+      <uap:VisualElements
+        DisplayName="VaultArc"
+        Description="Modern cross-platform archive manager"
+        BackgroundColor="transparent"
+        Square150x150Logo="Images\Square150x150Logo.scale-200.png"
+        Square44x44Logo="Images\Square44x44Logo.scale-200.png">
+        <uap:DefaultTile Wide310x150Logo="Images\Wide310x150Logo.scale-200.png" />
+        <uap:SplashScreen Image="Images\SplashScreen.scale-200.png" />
+      </uap:VisualElements>
+
+      <Extensions>
+        <!-- .zip association -->
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="zip">
+            <uap:SupportedFileTypes>
+              <uap:FileType>.zip</uap:FileType>
+            </uap:SupportedFileTypes>
+            <uap:DisplayName>ZIP Archive</uap:DisplayName>
+            <uap:Logo>Images\Square44x44Logo.scale-200.png</uap:Logo>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+
+        <!-- .arc association -->
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="arc">
+            <uap:SupportedFileTypes>
+              <uap:FileType>.arc</uap:FileType>
+            </uap:SupportedFileTypes>
+            <uap:DisplayName>VaultArc Archive</uap:DisplayName>
+            <uap:Logo>Images\Square44x44Logo.scale-200.png</uap:Logo>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+
+        <!-- .tar .gz .bz2 .xz .7z .rar -->
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="archives">
+            <uap:SupportedFileTypes>
+              <uap:FileType>.tar</uap:FileType>
+              <uap:FileType>.gz</uap:FileType>
+              <uap:FileType>.bz2</uap:FileType>
+              <uap:FileType>.xz</uap:FileType>
+              <uap:FileType>.7z</uap:FileType>
+              <uap:FileType>.rar</uap:FileType>
+            </uap:SupportedFileTypes>
+            <uap:DisplayName>Archive File</uap:DisplayName>
+            <uap:Logo>Images\Square44x44Logo.scale-200.png</uap:Logo>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

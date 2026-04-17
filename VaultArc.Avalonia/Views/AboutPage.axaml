@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VaultArc.Avalonia.ViewModels"
+             x:Class="VaultArc.Avalonia.Views.AboutPage"
+             x:DataType="vm:AboutViewModel">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="40,36,40,28" MaxWidth="560" Spacing="24" HorizontalAlignment="Left">
+
+            <StackPanel Spacing="12" HorizontalAlignment="Center">
+                <Image Width="112" Height="112" HorizontalAlignment="Center"
+                       Source="avares://VaultArc.Avalonia/Assets/VaultArcLogo.png" />
+                <TextBlock HorizontalAlignment="Center" FontSize="30" FontWeight="Bold" Text="{Binding AppName}" />
+                <TextBlock HorizontalAlignment="Center" FontSize="14" Opacity="0.6" Text="{Binding Version}" />
+            </StackPanel>
+
+            <Border Padding="22" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}">
+                <TextBlock FontSize="14" LineHeight="24" TextWrapping="WrapWithOverflow" Text="{Binding Description}" />
+            </Border>
+
+            <Border Padding="22" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="8">
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Text="Features" />
+                    <TextBlock FontSize="13" Opacity="0.7" TextWrapping="WrapWithOverflow"
+                               Text="AES-GCM &amp; XChaCha20 encryption  •  ZIP / TAR / 7z / RAR / .arc support  •  Cross-platform (Windows, macOS, Linux)  •  Built-in hash verification" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

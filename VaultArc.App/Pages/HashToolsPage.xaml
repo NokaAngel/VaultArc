@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="VaultArc.App.Pages.HashToolsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:VaultArc.Models">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Enabled">
+        <Grid Padding="32,28,32,20" MaxWidth="700" HorizontalAlignment="Left" RowSpacing="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock FontSize="28" FontWeight="SemiBold" Text="Hash Tools" />
+
+            <Border Grid.Row="1" Padding="20" CornerRadius="8" Background="{ThemeResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="14">
+                    <ComboBox
+                        Header="Algorithm"
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{x:Bind ViewModel.Algorithms}"
+                        SelectedItem="{x:Bind ViewModel.Algorithm, Mode=TwoWay}" />
+
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox PlaceholderText="File path" Text="{x:Bind ViewModel.LeftFilePath, Mode=TwoWay}" />
+                        <Button Grid.Column="1" Click="BrowseLeftClicked" ToolTipService.ToolTip="Browse">
+                            <FontIcon FontSize="14" Glyph="&#xE8B7;" />
+                        </Button>
+                        <Button Grid.Column="2" Click="HashClicked" Style="{ThemeResource AccentButtonStyle}" Content="Hash" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="2" Padding="20" CornerRadius="8" Background="{ThemeResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="14">
+                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Compare" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox PlaceholderText="Second file path" Text="{x:Bind ViewModel.RightFilePath, Mode=TwoWay}" />
+                        <Button Grid.Column="1" Click="BrowseRightClicked" ToolTipService.ToolTip="Browse">
+                            <FontIcon FontSize="14" Glyph="&#xE8B7;" />
+                        </Button>
+                        <Button Grid.Column="2" Click="CompareClicked" Content="Compare" />
+                    </Grid>
+                    <TextBlock FontWeight="SemiBold" Text="{x:Bind ViewModel.ComparisonResult, Mode=OneWay}" TextWrapping="WrapWholeWords" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="3" Padding="20" CornerRadius="8" Background="{ThemeResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock FontSize="16" FontWeight="SemiBold" Text="Results" VerticalAlignment="Center" />
+                        <Button Click="ExportClicked" Content="Export report" />
+                    </StackPanel>
+                    <ListView ItemsSource="{x:Bind ViewModel.Hashes, Mode=OneWay}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:HashReportItem">
+                                <StackPanel Padding="0,4" Spacing="2">
+                                    <TextBlock FontSize="12" Opacity="0.7" Text="{x:Bind FilePath}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock FontFamily="Cascadia Mono" FontSize="13" Text="{x:Bind HashHex}" IsTextSelectionEnabled="True" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+            </Border>
+
+            <TextBlock
+                Grid.Row="4"
+                FontSize="13"
+                Opacity="0.75"
+                Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
+                TextWrapping="WrapWholeWords" />
+        </Grid>
+    </ScrollViewer>
+</Page>

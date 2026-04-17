@@ -1,0 +1,137 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:VaultArc.Avalonia.ViewModels"
+        xmlns:models="using:VaultArc.Models"
+        x:Class="VaultArc.Avalonia.Views.ClassicArchiveExplorerWindow"
+        x:DataType="vm:OpenArchiveViewModel"
+        Title="VaultArc — Classic Explorer"
+        Width="1000" Height="700"
+        WindowStartupLocation="CenterScreen"
+        Icon="avares://VaultArc.Avalonia/Assets/AppIcon.ico"
+        Background="{DynamicResource VaultArcBackgroundBrush}">
+
+    <Grid x:Name="RootGrid" RowDefinitions="Auto,Auto,Auto,*,Auto">
+
+        <Menu Grid.Row="0" Background="{DynamicResource VaultArcClassicChromeBrush}">
+            <MenuItem Header="_File">
+                <MenuItem x:Name="MenuOpen" Header="Open Archive..." />
+                <MenuItem x:Name="MenuExtract" Header="Extract to..." />
+                <Separator />
+                <MenuItem x:Name="MenuClose" Header="Close" />
+            </MenuItem>
+            <MenuItem Header="_Actions">
+                <MenuItem x:Name="MenuOpenSel" Header="Open" />
+                <MenuItem x:Name="MenuRunSel" Header="Run" />
+                <MenuItem x:Name="MenuPreview" Header="Preview" />
+                <MenuItem x:Name="MenuIntegrity" Header="Test integrity" />
+            </MenuItem>
+            <MenuItem Header="_Tools">
+                <MenuItem x:Name="MenuRefresh" Header="Refresh" />
+            </MenuItem>
+        </Menu>
+
+        <Border Grid.Row="1" Padding="4,3" Background="{DynamicResource VaultArcClassicChromeBrush}"
+                BorderBrush="{DynamicResource VaultArcClassicChromeBorderBrush}" BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal" Spacing="2">
+                <Button x:Name="TbOpen" Width="34" Height="26" Padding="0" Content="📂" ToolTip.Tip="Open" />
+                <Button x:Name="TbExtract" Width="34" Height="26" Padding="0" Content="📤" ToolTip.Tip="Extract" />
+                <Separator Width="1" Height="20" Margin="3,0" />
+                <Button x:Name="TbOpenSel" Width="34" Height="26" Padding="0" Content="📄" ToolTip.Tip="Open" />
+                <Button x:Name="TbRunSel" Width="34" Height="26" Padding="0" Content="▶" ToolTip.Tip="Run" />
+                <Button x:Name="TbIntegrity" Width="34" Height="26" Padding="0" Content="✓" ToolTip.Tip="Test" />
+                <Separator Width="1" Height="20" Margin="3,0" />
+                <Button x:Name="TbRefresh" Width="34" Height="26" Padding="0" Content="🔄" ToolTip.Tip="Refresh" />
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2" Padding="8,5" Background="{DynamicResource VaultArcSurfaceBrush}"
+                BorderBrush="{DynamicResource VaultArcClassicChromeBorderBrush}" BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <Button x:Name="NavRoot" Width="28" Height="26" Padding="0" Content="🏠" ToolTip.Tip="Root" />
+                <Button x:Name="NavUp" Width="28" Height="26" Padding="0" Content="⬆" IsEnabled="{Binding CanNavigateUp}" ToolTip.Tip="Up" />
+                <TextBox MinWidth="380" VerticalAlignment="Center" Watermark="Archive path"
+                         Text="{Binding ArchivePath, Mode=TwoWay}" />
+                <Button x:Name="AddrBrowse" Height="26" Padding="10,0" Content="Browse" />
+                <Button x:Name="AddrOpen" Height="26" Padding="10,0" Classes="accent" Content="Open" />
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="3" ColumnDefinitions="2.2*,*">
+            <Grid RowDefinitions="Auto,Auto,*">
+                <Border Padding="8,5" Background="{DynamicResource VaultArcSurfaceBrush}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBox x:Name="ClassicSearchBox" MinWidth="180" Watermark="Search"
+                                 Text="{Binding SearchText, Mode=TwoWay}" />
+                        <CheckBox Content="Executables only" IsChecked="{Binding ShowExecutablesOnly, Mode=TwoWay}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Row="1" Padding="8,5" Background="{DynamicResource VaultArcListAccentBrush}">
+                    <Grid ColumnDefinitions="2.2*,*,*,*,1.4*">
+                        <TextBlock FontSize="12" FontWeight="SemiBold" Text="Name" />
+                        <TextBlock Grid.Column="1" FontSize="12" FontWeight="SemiBold" Text="Type" />
+                        <TextBlock Grid.Column="2" FontSize="12" FontWeight="SemiBold" Text="Size" />
+                        <TextBlock Grid.Column="3" FontSize="12" FontWeight="SemiBold" Text="Packed" />
+                        <TextBlock Grid.Column="4" FontSize="12" FontWeight="SemiBold" Text="Modified" />
+                    </Grid>
+                </Border>
+
+                <ListBox Grid.Row="2" x:Name="ClassicEntriesList" Padding="2,0"
+                         Background="{DynamicResource VaultArcBackgroundBrush}"
+                         ItemsSource="{Binding FilteredItems}"
+                         SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:ArchiveItem">
+                            <Grid Margin="4,3" ColumnDefinitions="2.2*,*,*,*,1.4*">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock FontSize="12" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" FontSize="12" Opacity="0.7" Text="{Binding ItemType}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" FontSize="12" Opacity="0.7" Text="{Binding Size}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="3" FontSize="12" Opacity="0.7" Text="{Binding CompressedSize}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="4" FontSize="12" Opacity="0.7" Text="{Binding ModifiedUtc}" VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+
+            <Border Grid.Column="1" Background="{DynamicResource VaultArcSurfaceBrush}"
+                    BorderBrush="{DynamicResource VaultArcClassicChromeBorderBrush}" BorderThickness="1,0,0,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12,8">
+                    <StackPanel Spacing="12">
+                        <StackPanel Spacing="6">
+                            <TextBlock FontSize="13" FontWeight="SemiBold" Text="Selected" />
+                            <TextBlock FontSize="12" Text="{Binding SelectedDisplayName}" TextWrapping="Wrap" />
+                            <TextBlock FontSize="11" Opacity="0.65" Text="{Binding SelectedFullPath}" TextWrapping="Wrap" />
+                            <Button x:Name="ClassicPreview" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Content="Preview" />
+                            <TextBox MinHeight="120" AcceptsReturn="True" IsReadOnly="True" FontSize="12"
+                                     Text="{Binding PreviewText}" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <Separator Height="1" Background="{DynamicResource VaultArcClassicChromeBorderBrush}" />
+
+                        <StackPanel Spacing="6">
+                            <TextBlock FontSize="13" FontWeight="SemiBold" Text="Extract" />
+                            <Grid ColumnDefinitions="*,4,Auto">
+                                <TextBox Watermark="Destination folder" Text="{Binding ExtractDestination, Mode=TwoWay}" FontSize="12" />
+                                <Button Grid.Column="2" x:Name="ClassicBrowseExtract" Content="📁" ToolTip.Tip="Browse" />
+                            </Grid>
+                            <CheckBox Content="Overwrite existing" FontSize="12" IsChecked="{Binding ExtractOverwrite, Mode=TwoWay}" />
+                            <Button x:Name="ClassicExtractAll" HorizontalAlignment="Stretch" Classes="accent"
+                                    IsEnabled="{Binding HasArchiveLoaded}" HorizontalContentAlignment="Center" Content="Extract All" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="4" Padding="8,4" Background="{DynamicResource VaultArcClassicChromeBrush}"
+                BorderBrush="{DynamicResource VaultArcClassicChromeBorderBrush}" BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock FontSize="12" VerticalAlignment="Center" Text="{Binding StatusMessage}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="1" FontSize="12" Opacity="0.7" VerticalAlignment="Center" Text="{Binding StatusBarSummary}" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="VaultArc.App.Pages.AboutPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Enabled">
+        <StackPanel Padding="40,36,40,28" MaxWidth="560" Spacing="24" HorizontalAlignment="Left">
+
+            <StackPanel Spacing="12" HorizontalAlignment="Center">
+                <Image Width="112" Height="112" HorizontalAlignment="Center" Source="ms-appx:///Assets/VaultArcLogo.png" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="30"
+                    FontWeight="Bold"
+                    Text="{x:Bind ViewModel.AppName, Mode=OneWay}" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="14"
+                    Opacity="0.6"
+                    Text="{x:Bind ViewModel.Version, Mode=OneWay}" />
+            </StackPanel>
+
+            <Border Padding="22" CornerRadius="10" Background="{ThemeResource VaultArcSurfaceBrush}">
+                <TextBlock
+                    FontSize="14"
+                    LineHeight="24"
+                    TextWrapping="WrapWholeWords"
+                    Text="{x:Bind ViewModel.Description, Mode=OneWay}" />
+            </Border>
+
+            <Border Padding="22" CornerRadius="10" Background="{ThemeResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="8">
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Text="Features" />
+                    <TextBlock FontSize="13" Opacity="0.7" TextWrapping="WrapWholeWords"
+                               Text="AES-GCM &amp; XChaCha20 encryption  •  ZIP / TAR / 7z / RAR / .arc support  •  Windows toast notifications  •  Explorer context menu integration  •  Built-in hash verification" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

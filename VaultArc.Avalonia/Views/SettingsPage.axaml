@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:VaultArc.Avalonia.ViewModels"
+             x:Class="VaultArc.Avalonia.Views.SettingsPage"
+             x:DataType="vm:SettingsViewModel">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="32,28,32,20" MaxWidth="640" HorizontalAlignment="Left" RowDefinitions="Auto,16,Auto,16,Auto,16,Auto,16,Auto,16,Auto">
+
+            <TextBlock FontSize="28" FontWeight="SemiBold" Text="Settings" />
+
+            <Border Grid.Row="2" Padding="20" CornerRadius="8" Background="{DynamicResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="14">
+                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Appearance" />
+                    <ToggleSwitch Content="Follow system theme" IsChecked="{Binding FollowSystemTheme, Mode=TwoWay}" />
+                    <TextBlock FontSize="12" Opacity="0.6" Margin="0,-8,0,0"
+                               Text="Automatically switches between light and dark when your OS changes." TextWrapping="WrapWithOverflow" />
+                    <ToggleSwitch Content="Dark mode (manual)"
+                                  IsChecked="{Binding IsDarkTheme, Mode=TwoWay}"
+                                  IsEnabled="{Binding !FollowSystemTheme}" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="4" Padding="20" CornerRadius="8" Background="{DynamicResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="14">
+                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Archive Explorer" />
+                    <CheckBox Content="Use classic WinRAR-style explorer window"
+                              IsChecked="{Binding UseClassicLayout, Mode=TwoWay}" />
+                    <TextBlock FontSize="12" Opacity="0.6" Margin="0,-8,0,0"
+                               Text="Opens archives in a separate window with a traditional menu bar, toolbar, and status bar."
+                               TextWrapping="WrapWithOverflow" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="6" Padding="20" CornerRadius="8" Background="{DynamicResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="14">
+                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Safety" />
+                    <CheckBox Content="Confirm before overwriting files" IsChecked="{Binding ConfirmOverwrite, Mode=TwoWay}" />
+                    <CheckBox Content="Safe extraction mode (block path traversal)" IsChecked="{Binding SafeExtractionMode, Mode=TwoWay}" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="8" Padding="20" CornerRadius="8" Background="{DynamicResource VaultArcSurfaceBrush}">
+                <StackPanel Spacing="14">
+                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Performance" />
+                    <StackPanel Spacing="4">
+                        <TextBlock FontSize="12" Text="Max concurrent jobs" />
+                        <NumericUpDown Minimum="1" Maximum="8"
+                                       Value="{Binding MaxConcurrentJobs, Mode=TwoWay}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Grid.Row="10" Spacing="10">
+                <Button x:Name="SaveBtn" Classes="accent" Content="Save settings" />
+                <TextBlock FontSize="13" Opacity="0.75" Text="{Binding StatusMessage}" TextWrapping="WrapWithOverflow" />
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

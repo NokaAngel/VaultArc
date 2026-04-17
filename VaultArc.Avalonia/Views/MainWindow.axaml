@@ -1,0 +1,69 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="VaultArc.Avalonia.Views.MainWindow"
+        Title="VaultArc"
+        Width="1200" Height="800"
+        WindowStartupLocation="CenterScreen"
+        Icon="avares://VaultArc.Avalonia/Assets/AppIcon.ico"
+        Background="{DynamicResource VaultArcBackgroundBrush}">
+
+    <Grid ColumnDefinitions="220,*">
+        <Border Background="{DynamicResource VaultArcSurfaceBrush}" BorderBrush="{DynamicResource VaultArcListAccentBrush}" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Margin="16,20,16,16" Spacing="8">
+                    <Image Width="40" Height="40" HorizontalAlignment="Left"
+                           Source="avares://VaultArc.Avalonia/Assets/VaultArcLogo.png" />
+                    <TextBlock FontSize="18" FontWeight="Bold" Text="VaultArc" />
+                </StackPanel>
+
+                <ListBox x:Name="NavList" Margin="0,0,0,0" SelectedIndex="0"
+                         Background="Transparent" BorderThickness="0">
+                    <ListBoxItem Tag="home">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Width="20" TextAlignment="Center" Text="🏠" />
+                            <TextBlock Text="Home" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="open">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Width="20" TextAlignment="Center" Text="📂" />
+                            <TextBlock Text="Open Archive" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="create">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Width="20" TextAlignment="Center" Text="📦" />
+                            <TextBlock Text="Create Archive" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="jobs">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Width="20" TextAlignment="Center" Text="⏳" />
+                            <TextBlock Text="Job Queue" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="hash">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Width="20" TextAlignment="Center" Text="#️⃣" />
+                            <TextBlock Text="Hash Tools" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="settings">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Width="20" TextAlignment="Center" Text="⚙" />
+                            <TextBlock Text="Settings" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="about">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Width="20" TextAlignment="Center" Text="ℹ" />
+                            <TextBlock Text="About" />
+                        </StackPanel>
+                    </ListBoxItem>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <ContentControl Grid.Column="1" x:Name="ContentArea" />
+    </Grid>
+</Window>

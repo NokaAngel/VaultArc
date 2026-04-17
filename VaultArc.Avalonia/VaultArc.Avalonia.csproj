@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>VaultArc.Avalonia</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.13" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.13" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.13" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.13" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VaultArc.Core\VaultArc.Core.csproj" />
+    <ProjectReference Include="..\VaultArc.Models\VaultArc.Models.csproj" />
+    <ProjectReference Include="..\VaultArc.Archive\VaultArc.Archive.csproj" />
+    <ProjectReference Include="..\VaultArc.Hashing\VaultArc.Hashing.csproj" />
+    <ProjectReference Include="..\VaultArc.Security\VaultArc.Security.csproj" />
+    <ProjectReference Include="..\VaultArc.Jobs\VaultArc.Jobs.csproj" />
+    <ProjectReference Include="..\VaultArc.Services\VaultArc.Services.csproj" />
+  </ItemGroup>
+
+</Project>

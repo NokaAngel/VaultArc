@@ -1,3 +1,4 @@
+using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,5 +16,11 @@ public partial class JobQueuePage : UserControl
         ViewModel = App.Services.GetRequiredService<JobQueueViewModel>();
         DataContext = ViewModel;
         RefreshBtn.Click += (_, _) => ViewModel.Refresh();
+    }
+
+    private void CancelBtn_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is Guid jobId && DataContext is JobQueueViewModel vm)
+            vm.Cancel(jobId);
     }
 }

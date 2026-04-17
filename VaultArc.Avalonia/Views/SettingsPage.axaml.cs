@@ -23,4 +23,13 @@ public partial class SettingsPage : UserControl
         await ViewModel.SaveAsync();
         App.ApplyTheme(ViewModel.BuildSettings());
     }
+
+    private void OnUseClassicLayoutChanged(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is SettingsViewModel vm && vm.UseClassicLayout)
+        {
+            var window = new ClassicArchiveExplorerWindow();
+            window.Show();
+        }
+    }
 }

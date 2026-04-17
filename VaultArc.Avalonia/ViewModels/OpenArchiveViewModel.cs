@@ -38,6 +38,15 @@ public partial class OpenArchiveViewModel(
     private string _previewText = string.Empty;
 
     [ObservableProperty]
+    private byte[]? _previewData;
+
+    [ObservableProperty]
+    private bool _isPreviewTruncated;
+
+    [ObservableProperty]
+    private bool _isPreviewImage;
+
+    [ObservableProperty]
     private bool _showExecutablesOnly;
 
     [ObservableProperty]
@@ -187,6 +196,11 @@ public partial class OpenArchiveViewModel(
                 result.Error?.Message ?? "Preview failed.",
                 result.Error?.Exception);
         }
+
+        PreviewData = result.Value.Data;
+        IsPreviewTruncated = result.Value.IsTruncated;
+        var ext = Path.GetExtension(result.Value.EntryPath);
+        IsPreviewImage = ext is ".png" or ".jpg" or ".jpeg" or ".gif" or ".bmp" or ".webp" or ".ico";
 
         PreviewText = result.Value.MimeType.StartsWith("text/", StringComparison.OrdinalIgnoreCase)
             ? System.Text.Encoding.UTF8.GetString(result.Value.Data)

@@ -31,6 +31,13 @@ public partial class App : Application
 
     public override async void OnFrameworkInitializationCompleted()
     {
+        AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            WriteCrashReport(args.Exception);
+            args.SetObserved();
+        };
+
         Services = ConfigureServices();
 
         try
@@ -80,6 +87,40 @@ public partial class App : Application
         return true;
     }
 
+    private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        if (e.ExceptionObject is Exception ex)
+            WriteCrashReport(ex);
+    }
+
+    private static void WriteCrashReport(Exception? ex)
+    {
+        if (ex == null) return;
+        try
+        {
+            var crashDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "VaultArc", "crashes");
+            Directory.CreateDirectory(crashDir);
+
+            var report = new
+            {
+                Timestamp = DateTime.UtcNow,
+                ExceptionType = ex.GetType().FullName,
+                Message = ex.Message,
+                StackTrace = ex.StackTrace,
+                InnerException = ex.InnerException?.Message,
+                OSVersion = Environment.OSVersion.ToString(),
+                Runtime = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription
+            };
+
+            var json = System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            var fileName = $"crash-report-{DateTime.UtcNow:yyyyMMdd-HHmmss}.json";
+            File.WriteAllText(Path.Combine(crashDir, fileName), json);
+        }
+        catch { }
+    }
+
     private static IServiceProvider ConfigureServices()
     {
         var collection = new ServiceCollection();
@@ -98,6 +139,9 @@ public partial class App : Application
         collection.AddSingleton<IArchiveNavigationService, ArchiveNavigationService>();
         collection.AddSingleton<IArchiveLaunchService, ArchiveLaunchService>();
         collection.AddSingleton<IPlatformService, CrossPlatformService>();
+        collection.AddSingleton<ISecretScannerService, VaultArc.Security.SecretScannerService>();
+        collection.AddSingleton<IDuplicateDetectionService, DuplicateDetectionService>();
+        collection.AddSingleton<IArchiveDiffService, ArchiveDiffService>();
         collection.AddSingleton<VaultArcFacade>();
 
         collection.AddTransient<HomeViewModel>();

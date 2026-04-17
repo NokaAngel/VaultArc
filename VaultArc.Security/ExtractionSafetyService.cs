@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using VaultArc.Core;
+using VaultArc.Models;
 
 namespace VaultArc.Security;
 
@@ -55,4 +56,37 @@ public sealed class ExtractionSafetyService : IExtractionSafetyService, IArchive
 
     public OperationResult<string> ValidateEntryTargetPath(string rootDirectory, string entryPath) =>
         ValidateExtractionTarget(rootDirectory, entryPath);
+
+    public OperationResult ValidateAgainstPolicy(string entryPath, long entrySize, ExtractionPolicy policy)
+    {
+        if (policy.Kind == ExtractionPolicyKind.Permissive)
+            return OperationResult.Success();
+
+        if (policy.BlockExecutables)
+        {
+            var ext = Path.GetExtension(entryPath).ToLowerInvariant();
+            if (ext is ".exe" or ".bat" or ".cmd" or ".ps1" or ".sh" or ".msi" or ".dll" or ".com" or ".scr" or ".vbs" or ".js" or ".wsf")
+                return OperationResult.Failure("policy.executable_blocked", $"Executable file blocked by policy: {entryPath}");
+        }
+
+        if (policy.MaxFileSizeMB > 0 && entrySize > policy.MaxFileSizeMB * 1024L * 1024L)
+            return OperationResult.Failure("policy.file_too_large", $"File exceeds policy size limit ({policy.MaxFileSizeMB} MB): {entryPath}");
+
+        if (policy.BlockHiddenFiles)
+        {
+            var name = Path.GetFileName(entryPath);
+            if (name.StartsWith('.') || name.StartsWith('_'))
+                return OperationResult.Failure("policy.hidden_blocked", $"Hidden file blocked by policy: {entryPath}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(policy.AllowedExtensions))
+        {
+            var allowed = policy.AllowedExtensions.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var ext = Path.GetExtension(entryPath).ToLowerInvariant();
+            if (allowed.Length > 0 && !allowed.Any(a => a.Equals(ext, StringComparison.OrdinalIgnoreCase)))
+                return OperationResult.Failure("policy.extension_blocked", $"File extension not allowed by policy: {entryPath}");
+        }
+
+        return OperationResult.Success();
+    }
 }

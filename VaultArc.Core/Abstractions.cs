@@ -56,6 +56,8 @@ public interface IArchiveService
     Task<OperationResult> CreateArchiveAsync(ArchiveCreateRequest request, IProgress<JobProgressUpdate>? progress, CancellationToken cancellationToken);
     Task<OperationResult<ArchivePreviewResult>> PreviewEntryAsync(ArchiveOpenRequest request, string entryPath, CancellationToken cancellationToken);
     Task<OperationResult> TestIntegrityAsync(ArchiveOpenRequest request, CancellationToken cancellationToken);
+    Task<OperationResult<IntegrityReport>> TestIntegrityDetailedAsync(ArchiveOpenRequest request, CancellationToken cancellationToken);
+    Task<OperationResult<IntegrityReport>> FastIntegrityScanAsync(ArchiveOpenRequest request, CancellationToken cancellationToken);
     Task<OperationResult<ArchiveEditSession>> CreateEditSessionAsync(ArchiveOpenRequest request, string entryPath, CancellationToken cancellationToken);
     Task<OperationResult> SaveEditedEntryAsync(ArchiveEditSession session, CancellationToken cancellationToken);
     Task<OperationResult> CleanupEditSessionAsync(ArchiveEditSession session);
@@ -128,6 +130,7 @@ public interface IExtractionSafetyService
 {
     OperationResult<string> ValidateExtractionTarget(string extractionRoot, string entryPath);
     bool IsSensitiveLocation(string path);
+    OperationResult ValidateAgainstPolicy(string entryPath, long entrySize, ExtractionPolicy policy);
 }
 
 public interface IRecentArchivesStore
@@ -150,6 +153,11 @@ public interface IJobQueueService
     bool Cancel(Guid jobId);
 }
 
+public interface ISecretScannerService
+{
+    Task<OperationResult<SecretScanReport>> ScanArchiveAsync(ArchiveOpenRequest request, CancellationToken cancellationToken);
+}
+
 public interface IPlatformService
 {
     void OpenFolder(string path);
@@ -158,4 +166,14 @@ public interface IPlatformService
     bool IsWindows { get; }
     bool IsMacOS { get; }
     bool IsLinux { get; }
+}
+
+public interface IDuplicateDetectionService
+{
+    Task<OperationResult<DuplicateReport>> ScanForDuplicatesAsync(IReadOnlyList<string> inputPaths, CancellationToken cancellationToken);
+}
+
+public interface IArchiveDiffService
+{
+    ArchiveDiffResult ComputeDiff(ArchiveSummary left, ArchiveSummary right);
 }

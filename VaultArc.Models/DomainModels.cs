@@ -63,7 +63,7 @@ public sealed record ArchiveCreateRequest(
     string? Password = null,
     ArcEncryptionProfileKind EncryptionProfile = ArcEncryptionProfileKind.XChaCha20Argon2id);
 
-public sealed record ArchivePreviewResult(string EntryPath, string MimeType, byte[] Data);
+public sealed record ArchivePreviewResult(string EntryPath, string MimeType, byte[] Data, bool IsTruncated = false);
 
 public sealed record ArchiveEditSession(
     string ArchivePath,
@@ -147,4 +147,39 @@ public sealed record AppSettings(
     int MaxConcurrentJobs,
     bool UseClassicLayout = false,
     bool FollowSystemTheme = true,
-    bool ShellContextMenuEnabled = false);
+    bool ShellContextMenuEnabled = false,
+    ExtractionPolicyKind ExtractionPolicyKind = ExtractionPolicyKind.Standard,
+    bool CheckForUpdates = true,
+    bool SendCrashReports = false);
+
+public sealed record SecretFinding(string EntryPath, int LineNumber, string PatternName, string Snippet);
+public sealed record SecretScanReport(IReadOnlyList<SecretFinding> Findings, int FilesScanned, TimeSpan Elapsed);
+
+public sealed record DuplicateGroup(string Hash, long FileSize, IReadOnlyList<string> Paths);
+public sealed record DuplicateReport(IReadOnlyList<DuplicateGroup> Groups, long TotalWastedBytes, int TotalFilesScanned);
+
+public enum DiffEntryKind { Added, Removed, Modified, Unchanged }
+public sealed record DiffEntry(string Path, DiffEntryKind Kind, long? LeftSize, long? RightSize);
+public sealed record ArchiveDiffResult(
+    IReadOnlyList<DiffEntry> Entries,
+    int AddedCount, int RemovedCount, int ModifiedCount, int UnchangedCount);
+
+public sealed record ExtractionReportEntry(string EntryPath, bool Succeeded, string? ErrorMessage);
+public sealed record ExtractionReport(IReadOnlyList<ExtractionReportEntry> Entries, int SucceededCount, int FailedCount);
+
+public sealed record IntegrityReportEntry(string EntryPath, bool IsValid, string? ErrorMessage);
+public sealed record IntegrityReport(IReadOnlyList<IntegrityReportEntry> Entries, int ValidCount, int InvalidCount);
+
+public enum ExtractionPolicyKind { Permissive, Standard, Strict, Custom }
+
+public sealed record ExtractionPolicy(
+    ExtractionPolicyKind Kind,
+    bool BlockExecutables = false,
+    int MaxFileSizeMB = 0,
+    bool BlockHiddenFiles = false,
+    string? AllowedExtensions = null)
+{
+    public static ExtractionPolicy Permissive => new(ExtractionPolicyKind.Permissive);
+    public static ExtractionPolicy Standard => new(ExtractionPolicyKind.Standard, BlockExecutables: false, MaxFileSizeMB: 2048);
+    public static ExtractionPolicy Strict => new(ExtractionPolicyKind.Strict, BlockExecutables: true, MaxFileSizeMB: 512, BlockHiddenFiles: true);
+}

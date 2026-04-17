@@ -19,6 +19,7 @@
                         </StackPanel>
                     </Button>
                     <Button x:Name="IntegrityBtn" Content="✓" ToolTip.Tip="Test archive integrity" />
+                    <TextBox MinWidth="180" Watermark="Password (if encrypted)" PasswordChar="*" Text="{Binding Password, Mode=TwoWay}" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="20" Margin="0,8,0,0">
@@ -129,7 +130,10 @@
                                 <TextBlock FontSize="12" Opacity="0.8" Text="{Binding SelectedFullPath}" TextWrapping="WrapWithOverflow" />
                             </StackPanel>
                             <Button x:Name="PreviewBtn" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Content="Preview" />
-                            <TextBox AcceptsReturn="True" IsReadOnly="True" MinHeight="120"
+                            <TextBlock x:Name="TruncationWarning" FontSize="11" Opacity="0.7" Foreground="Orange"
+                                       Text="File too large for full preview (showing first 512 KB)" IsVisible="False" Margin="0,0,0,4" />
+                            <Image x:Name="PreviewImage" MaxHeight="300" IsVisible="False" Stretch="Uniform" HorizontalAlignment="Left" />
+                            <TextBox x:Name="PreviewTextBox" AcceptsReturn="True" IsReadOnly="True" MinHeight="120"
                                      Text="{Binding PreviewText}" TextWrapping="Wrap" FontSize="12" />
                         </StackPanel>
 

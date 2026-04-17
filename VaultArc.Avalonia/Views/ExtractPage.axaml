@@ -23,6 +23,7 @@
                     <Button x:Name="BrowseDestBtn" Content="📁 Browse folder" />
                     <CheckBox Content="Overwrite existing files" IsChecked="{Binding OverwriteExisting, Mode=TwoWay}" />
                     <TextBlock FontSize="12" Opacity="0.65" Text="Password prompts appear only if the archive requires one." TextWrapping="WrapWithOverflow" />
+                    <TextBox Watermark="Password (if encrypted)" PasswordChar="*" Text="{Binding Password, Mode=TwoWay}" />
                 </StackPanel>
             </Border>
 

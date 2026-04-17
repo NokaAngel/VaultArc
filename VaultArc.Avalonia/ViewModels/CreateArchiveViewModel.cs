@@ -21,6 +21,8 @@ public partial class CreateArchiveViewModel(VaultArcFacade facade) : ViewModelBa
     [ObservableProperty]
     private ArcEncryptionProfileKind _encryptionProfile = ArcEncryptionProfileKind.XChaCha20Argon2id;
 
+    [ObservableProperty] private string _passwordHint = "";
+
     public Array Presets => Enum.GetValues(typeof(CompressionPresetKind));
     public Array EncryptionProfiles => Enum.GetValues(typeof(ArcEncryptionProfileKind));
 
@@ -49,6 +51,31 @@ public partial class CreateArchiveViewModel(VaultArcFacade facade) : ViewModelBa
         var result = await facade.QueueArchiveCreationAsync(request, CancellationToken.None);
         StatusMessage = result.IsSuccess ? "Compression job queued." : result.Error?.Message ?? "Failed to queue compression job.";
         if (result.IsFailure) DeleteDestinationPlaceholderIfEmpty();
+    }
+
+    public async Task QueueSecureSendAsync()
+    {
+        if (string.IsNullOrWhiteSpace(DestinationPath))
+        {
+            StatusMessage = "Select a destination path first.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(Password))
+        {
+            StatusMessage = "Password is required for secure-send bundles.";
+            return;
+        }
+
+        var arcPath = Path.ChangeExtension(DestinationPath, ".arc");
+        var request = new ArchiveCreateRequest(
+            arcPath,
+            InputPaths?.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList() ?? [],
+            Preset,
+            Password,
+            EncryptionProfile);
+
+        var result = await facade.QueueArchiveCreationAsync(request, CancellationToken.None).ConfigureAwait(false);
+        StatusMessage = result.IsSuccess ? $"Secure bundle queued: {Path.GetFileName(arcPath)}" : result.Error!.Message;
     }
 
     private void DeleteDestinationPlaceholderIfEmpty()

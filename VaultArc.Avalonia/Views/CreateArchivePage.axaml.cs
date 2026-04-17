@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using VaultArc.Avalonia.Helpers;
 using VaultArc.Avalonia.ViewModels;
 
 namespace VaultArc.Avalonia.Views;
@@ -20,6 +21,23 @@ public partial class CreateArchivePage : UserControl
         BrowseFolderBtn.Click += BrowseFolderClicked;
         BrowseFilesBtn.Click += BrowseFilesClicked;
         QueueBtn.Click += QueueClicked;
+
+        var secureSendBtn = this.FindControl<Button>("SecureSendBtn");
+        if (secureSendBtn != null)
+            secureSendBtn.Click += async (_, _) => await ViewModel.QueueSecureSendAsync();
+
+        var passwordBox = this.FindControl<TextBox>("PasswordBox");
+        var strengthBar = this.FindControl<ProgressBar>("StrengthBar");
+        var strengthLabel = this.FindControl<TextBlock>("StrengthLabel");
+        if (passwordBox != null)
+        {
+            passwordBox.TextChanged += (_, _) =>
+            {
+                var (_, label, percent) = PasswordStrengthHelper.Evaluate(passwordBox.Text ?? "");
+                if (strengthBar != null) strengthBar.Value = percent;
+                if (strengthLabel != null) strengthLabel.Text = label;
+            };
+        }
     }
 
     private async void BrowseDestClicked(object? sender, RoutedEventArgs e)

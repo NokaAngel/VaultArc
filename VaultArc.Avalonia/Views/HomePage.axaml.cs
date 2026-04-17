@@ -16,4 +16,16 @@ public partial class HomePage : UserControl
                 await vm.RefreshAsync();
         };
     }
+
+    private void RecentArchiveBtn_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is string path && DataContext is HomeViewModel vm)
+            vm.RequestOpenArchive(path);
+    }
+
+    private void FeatureCard_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is string tag && DataContext is HomeViewModel vm)
+            vm.RequestNavigate(tag);
+    }
 }

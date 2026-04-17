@@ -10,6 +10,8 @@ internal static class ArcArchiveService
 {
     private static readonly byte[] Magic = "VAC1"u8.ToArray();
     private const byte Version = 1;
+    private static readonly byte[] RecoveryMarker = "VRCV"u8.ToArray();
+    private const int RecoveryBlockLength = 17;
 
     internal static bool IsArcPath(string path) =>
         path.EndsWith(".arc", StringComparison.OrdinalIgnoreCase);
@@ -90,6 +92,15 @@ internal static class ArcArchiveService
             var manifest = new ArcManifest(DateTimeOffset.UtcNow, entries);
             var manifestPlain = JsonSerializer.SerializeToUtf8Bytes(manifest, ArcJsonContext.Default.ArcManifest);
             var manifestCipher = ArcCrypto.Encrypt(manifestPlain, key, profile, header.ManifestNonce, "manifest"u8.ToArray());
+
+            // Write recovery block before manifest for disaster recovery.
+            var recoveryPayload = new byte[13];
+            RecoveryMarker.CopyTo(recoveryPayload.AsSpan(0, 4));
+            BitConverter.TryWriteBytes(recoveryPayload.AsSpan(4, 8), output.Position + RecoveryBlockLength);
+            recoveryPayload[12] = Version;
+            var recoveryChecksum = ComputeRecoveryChecksum(recoveryPayload);
+            await output.WriteAsync(recoveryPayload, cancellationToken).ConfigureAwait(false);
+            await output.WriteAsync(recoveryChecksum, cancellationToken).ConfigureAwait(false);
 
             // Append manifest at end and store its length in header slot.
             var manifestOffset = output.Position;
@@ -220,13 +231,15 @@ internal static class ArcArchiveService
                 loaded.Error?.Exception);
         }
 
-        if (!loaded.Value.DataByPath.TryGetValue(entryPath, out var bytes))
+        if (!loaded.Value.DataByPath.TryGetValue(entryPath, out var data))
         {
             return OperationResult<ArchivePreviewResult>.Failure("archive.entry_missing", $"Archive entry not found: {entryPath}");
         }
 
+        bool truncated = data.Length > 524_288;
+        var previewData = truncated ? data[..524_288] : data;
         var mime = GuessMime(entryPath);
-        return OperationResult<ArchivePreviewResult>.Success(new ArchivePreviewResult(entryPath, mime, bytes));
+        return OperationResult<ArchivePreviewResult>.Success(new ArchivePreviewResult(entryPath, mime, previewData, truncated));
     }
 
     internal static async Task<OperationResult> TestIntegrityAsync(
@@ -257,6 +270,149 @@ internal static class ArcArchiveService
         }
 
         return OperationResult.Success();
+    }
+
+    internal static async Task<OperationResult<IntegrityReport>> TestIntegrityDetailedAsync(
+        ArchiveOpenRequest request,
+        CancellationToken cancellationToken)
+    {
+        var loaded = await LoadAsync(request, includeData: true, cancellationToken).ConfigureAwait(false);
+        if (loaded.IsFailure || loaded.Value is null)
+        {
+            return OperationResult<IntegrityReport>.Failure(
+                loaded.Error?.Code ?? "archive.integrity_failed",
+                loaded.Error?.Message ?? "Integrity verification failed.",
+                loaded.Error?.Exception);
+        }
+
+        var entries = new List<IntegrityReportEntry>();
+        int valid = 0, invalid = 0;
+
+        foreach (var entry in loaded.Value.Manifest.Entries.Where(static e => !e.IsDirectory))
+        {
+            if (!loaded.Value.DataByPath.TryGetValue(entry.Path, out var data))
+            {
+                entries.Add(new IntegrityReportEntry(entry.Path, false, $"Missing data for entry {entry.Path}."));
+                invalid++;
+                continue;
+            }
+
+            var hash = Convert.ToHexString(SHA256.HashData(data));
+            if (!string.Equals(hash, entry.Sha256Hex, StringComparison.OrdinalIgnoreCase))
+            {
+                entries.Add(new IntegrityReportEntry(entry.Path, false, $"Hash mismatch for entry {entry.Path}."));
+                invalid++;
+            }
+            else
+            {
+                entries.Add(new IntegrityReportEntry(entry.Path, true, null));
+                valid++;
+            }
+        }
+
+        return OperationResult<IntegrityReport>.Success(new IntegrityReport(entries, valid, invalid));
+    }
+
+    internal static async Task<OperationResult<IntegrityReport>> FastIntegrityScanAsync(
+        ArchiveOpenRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!File.Exists(request.ArchivePath))
+        {
+            return OperationResult<IntegrityReport>.Failure("archive.not_found", $"Archive not found: {request.ArchivePath}");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Password))
+        {
+            return OperationResult<IntegrityReport>.Failure("archive.password_required", "This .arc archive requires a password.");
+        }
+
+        try
+        {
+            await using var stream = File.OpenRead(request.ArchivePath);
+            using var reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen: true);
+            var fileSize = stream.Length;
+
+            var magic = reader.ReadBytes(4);
+            if (!magic.SequenceEqual(Magic))
+            {
+                return OperationResult<IntegrityReport>.Failure("archive.invalid_format", "Invalid .arc file format.");
+            }
+
+            var version = reader.ReadByte();
+            if (version != Version)
+            {
+                return OperationResult<IntegrityReport>.Failure("archive.invalid_format", $"Unsupported .arc version: {version}");
+            }
+
+            var profile = (ArcEncryptionProfileKind)reader.ReadByte();
+            var saltLength = reader.ReadByte();
+            var nonceLength = reader.ReadByte();
+            var iterations = reader.ReadInt32();
+            var memoryKb = reader.ReadInt32();
+            var parallelism = reader.ReadInt32();
+            var salt = reader.ReadBytes(saltLength);
+            var manifestNonce = reader.ReadBytes(nonceLength);
+            var manifestLength = reader.ReadInt64();
+            var dataRegionStart = stream.Position;
+
+            if (!Enum.IsDefined(profile))
+            {
+                return OperationResult<IntegrityReport>.Failure("archive.crypto_profile_unsupported", "Unsupported encryption profile.");
+            }
+
+            var key = ArcCrypto.DeriveKey(request.Password, profile, salt, iterations, memoryKb, parallelism);
+
+            var manifestOffset = fileSize - manifestLength;
+            if (manifestOffset < dataRegionStart)
+            {
+                return OperationResult<IntegrityReport>.Failure("archive.invalid_format", "Archive manifest pointer is invalid.");
+            }
+
+            stream.Position = manifestOffset;
+            var manifestCipher = reader.ReadBytes((int)manifestLength);
+            var manifestPlain = ArcCrypto.Decrypt(manifestCipher, key, profile, manifestNonce, "manifest"u8.ToArray());
+            var manifest = JsonSerializer.Deserialize(manifestPlain, ArcJsonContext.Default.ArcManifest);
+
+            if (manifest is null)
+            {
+                return OperationResult<IntegrityReport>.Failure("archive.invalid_format", "Archive manifest is missing.");
+            }
+
+            var entries = new List<IntegrityReportEntry>();
+            int valid = 0, invalid = 0;
+
+            foreach (var entry in manifest.Entries.Where(static e => !e.IsDirectory))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var blobEnd = entry.Offset + entry.CipherLength;
+                if (entry.Offset < dataRegionStart || blobEnd > fileSize)
+                {
+                    entries.Add(new IntegrityReportEntry(entry.Path, false,
+                        $"Blob bounds [{entry.Offset}..{blobEnd}) exceed file bounds [{dataRegionStart}..{fileSize})."));
+                    invalid++;
+                }
+                else
+                {
+                    entries.Add(new IntegrityReportEntry(entry.Path, true, null));
+                    valid++;
+                }
+            }
+
+            return OperationResult<IntegrityReport>.Success(new IntegrityReport(entries, valid, invalid));
+        }
+        catch (CryptographicException ex)
+        {
+            return OperationResult<IntegrityReport>.Failure("archive.invalid_password", "Invalid password for encrypted archive.", ex);
+        }
+        catch (ArgumentException ex)
+        {
+            return OperationResult<IntegrityReport>.Failure("archive.invalid_password", "Invalid password for encrypted archive.", ex);
+        }
+        catch (Exception ex)
+        {
+            return OperationResult<IntegrityReport>.Failure("archive.fast_scan_failed", "Fast integrity scan failed.", ex);
+        }
     }
 
     internal static async Task<OperationResult<ArchiveEditSession>> CreateEditSessionAsync(
@@ -445,19 +601,28 @@ internal static class ArcArchiveService
             var header = new ArcHeader(profile, salt, iterations, memoryKb, parallelism, manifestNonce);
             var key = ArcCrypto.DeriveKey(request.Password, profile, salt, iterations, memoryKb, parallelism);
 
-            var manifestOffset = stream.Length - manifestLength;
-            if (manifestOffset < stream.Position)
+            ArcManifest? manifest = null;
+            var normalManifestOffset = stream.Length - manifestLength;
+            if (normalManifestOffset >= stream.Position)
             {
-                return OperationResult<LoadedArc>.Failure("archive.invalid_format", "Archive manifest pointer is invalid.");
+                try
+                {
+                    stream.Position = normalManifestOffset;
+                    var manifestCipher = reader.ReadBytes((int)manifestLength);
+                    var manifestPlain = ArcCrypto.Decrypt(manifestCipher, key, profile, manifestNonce, "manifest"u8.ToArray());
+                    manifest = JsonSerializer.Deserialize(manifestPlain, ArcJsonContext.Default.ArcManifest);
+                }
+                catch (CryptographicException) { throw; }
+                catch (ArgumentException) { throw; }
+                catch { /* structural damage — attempt recovery below */ }
             }
 
-            stream.Position = manifestOffset;
-            var manifestCipher = reader.ReadBytes((int)manifestLength);
-            var manifestPlain = ArcCrypto.Decrypt(manifestCipher, key, profile, manifestNonce, "manifest"u8.ToArray());
-            var manifest = JsonSerializer.Deserialize(manifestPlain, ArcJsonContext.Default.ArcManifest);
+            manifest ??= TryRecoverManifest(stream, key, profile, manifestNonce);
+
             if (manifest is null)
             {
-                return OperationResult<LoadedArc>.Failure("archive.invalid_format", "Archive manifest is missing.");
+                return OperationResult<LoadedArc>.Failure("archive.invalid_format",
+                    "Archive manifest is missing or could not be recovered.");
             }
 
             var dataByPath = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
@@ -556,6 +721,70 @@ internal static class ArcArchiveService
             ".webp" => "image/webp",
             _ => "application/octet-stream"
         };
+    }
+
+    private static byte[] ComputeRecoveryChecksum(byte[] data)
+    {
+        var hash = SHA256.HashData(data);
+        return hash[..4];
+    }
+
+    private static ArcManifest? TryRecoverManifest(
+        Stream stream, byte[] key, ArcEncryptionProfileKind profile, byte[] manifestNonce)
+    {
+        try
+        {
+            var fileLength = stream.Length;
+            if (fileLength < RecoveryBlockLength)
+                return null;
+
+            const int chunkSize = 1 << 20;
+            var scanEnd = fileLength;
+
+            while (scanEnd > 0)
+            {
+                var scanStart = Math.Max(0, scanEnd - chunkSize);
+                var readLen = (int)(scanEnd - scanStart);
+
+                stream.Position = scanStart;
+                var chunk = new byte[readLen];
+                var actualRead = stream.Read(chunk, 0, readLen);
+
+                for (var i = actualRead - RecoveryBlockLength; i >= 0; i--)
+                {
+                    if (chunk[i] != 'V' || chunk[i + 1] != 'R' ||
+                        chunk[i + 2] != 'C' || chunk[i + 3] != 'V')
+                        continue;
+
+                    var payload = chunk.AsSpan(i, 13).ToArray();
+                    var storedChecksum = chunk.AsSpan(i + 13, 4).ToArray();
+                    if (!storedChecksum.AsSpan().SequenceEqual(ComputeRecoveryChecksum(payload)))
+                        continue;
+
+                    var manifestStartOffset = BitConverter.ToInt64(payload, 4);
+                    if (manifestStartOffset <= 0 || manifestStartOffset >= fileLength)
+                        continue;
+
+                    var manifestCipherLength = (int)(fileLength - manifestStartOffset);
+                    var manifestCipher = new byte[manifestCipherLength];
+                    stream.Position = manifestStartOffset;
+                    stream.ReadExactly(manifestCipher, 0, manifestCipherLength);
+
+                    var manifestPlain = ArcCrypto.Decrypt(
+                        manifestCipher, key, profile, manifestNonce, "manifest"u8.ToArray());
+                    return JsonSerializer.Deserialize(manifestPlain, ArcJsonContext.Default.ArcManifest);
+                }
+
+                scanEnd = scanStart + RecoveryBlockLength - 1;
+                if (scanStart == 0) break;
+            }
+        }
+        catch
+        {
+            // Recovery scan failed — caller handles the null return
+        }
+
+        return null;
     }
 
     private sealed record LoadedArc(ArcHeader Header, ArcManifest Manifest, Dictionary<string, byte[]> DataByPath);

@@ -31,6 +31,10 @@
                                 <TextBlock FontSize="12" Opacity="0.65" Text="{Binding EtaText}" />
                             </StackPanel>
                             <TextBlock FontSize="12" Opacity="0.7" Text="{Binding StatusMessage}" TextTrimming="CharacterEllipsis" />
+                            <Button Content="Cancel" IsVisible="{Binding IsInProgress}"
+                                    Tag="{Binding JobId}"
+                                    Click="CancelBtn_Click"
+                                    HorizontalAlignment="Left" Padding="12,4" Margin="0,4,0,0" />
                         </StackPanel>
                     </Border>
                 </DataTemplate>

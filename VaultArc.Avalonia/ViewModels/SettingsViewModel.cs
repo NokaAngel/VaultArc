@@ -12,6 +12,11 @@ public partial class SettingsViewModel(VaultArcFacade facade) : ViewModelBase
     [ObservableProperty] private bool _safeExtractionMode = true;
     [ObservableProperty] private int _maxConcurrentJobs = 2;
     [ObservableProperty] private bool _useClassicLayout;
+    [ObservableProperty] private ExtractionPolicyKind _extractionPolicy;
+    [ObservableProperty] private bool _checkForUpdates;
+    [ObservableProperty] private bool _sendCrashReports;
+
+    public ExtractionPolicyKind[] ExtractionPolicies { get; } = Enum.GetValues<ExtractionPolicyKind>();
 
     public async Task LoadAsync()
     {
@@ -22,11 +27,15 @@ public partial class SettingsViewModel(VaultArcFacade facade) : ViewModelBase
         SafeExtractionMode = settings.SafeExtractionMode;
         MaxConcurrentJobs = settings.MaxConcurrentJobs;
         UseClassicLayout = settings.UseClassicLayout;
+        ExtractionPolicy = settings.ExtractionPolicyKind;
+        CheckForUpdates = settings.CheckForUpdates;
+        SendCrashReports = settings.SendCrashReports;
     }
 
     public AppSettings BuildSettings() =>
         new(IsDarkTheme, ConfirmOverwrite, SafeExtractionMode, MaxConcurrentJobs,
-            UseClassicLayout, FollowSystemTheme);
+            UseClassicLayout, FollowSystemTheme, ExtractionPolicyKind: ExtractionPolicy,
+            CheckForUpdates: CheckForUpdates, SendCrashReports: SendCrashReports);
 
     public async Task SaveAsync()
     {

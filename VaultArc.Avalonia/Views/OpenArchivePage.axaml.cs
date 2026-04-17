@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using VaultArc.Avalonia.ViewModels;
@@ -60,8 +61,38 @@ public partial class OpenArchivePage : UserControl
     private async void TempClicked(object? sender, RoutedEventArgs e) =>
         await ViewModel.OpenLastSessionFolderAsync();
 
-    private async void PreviewClicked(object? sender, RoutedEventArgs e) =>
+    private async void PreviewClicked(object? sender, RoutedEventArgs e)
+    {
         await ViewModel.PreviewSelectedAsync();
+
+        var truncWarn = this.FindControl<TextBlock>("TruncationWarning");
+        var previewImg = this.FindControl<Image>("PreviewImage");
+        var previewTxt = this.FindControl<TextBox>("PreviewTextBox");
+        if (truncWarn != null) truncWarn.IsVisible = ViewModel.IsPreviewTruncated;
+        if (previewImg != null && previewTxt != null)
+        {
+            if (ViewModel.IsPreviewImage && ViewModel.PreviewData is { Length: > 0 })
+            {
+                try
+                {
+                    using var ms = new System.IO.MemoryStream(ViewModel.PreviewData);
+                    previewImg.Source = new Bitmap(ms);
+                    previewImg.IsVisible = true;
+                    previewTxt.IsVisible = false;
+                }
+                catch
+                {
+                    previewImg.IsVisible = false;
+                    previewTxt.IsVisible = true;
+                }
+            }
+            else
+            {
+                previewImg.IsVisible = false;
+                previewTxt.IsVisible = true;
+            }
+        }
+    }
 
     private async void BrowseExtractClicked(object? sender, RoutedEventArgs e)
     {

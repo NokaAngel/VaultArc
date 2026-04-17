@@ -108,40 +108,66 @@ public sealed class SharpCompressArchiveService(IExtractionSafetyService safetyS
             var entries = archive.Entries.Where(static entry => !entry.IsDirectory).ToList();
             var totalEntries = entries.Count;
             var startedAt = DateTimeOffset.UtcNow;
+            var reportEntries = new List<ExtractionReportEntry>();
 
             for (var i = 0; i < totalEntries; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var entry = entries[i];
-                var validatedPath = safetyService.ValidateExtractionTarget(request.DestinationDirectory, entry.Key ?? string.Empty);
-                if (validatedPath.IsFailure || validatedPath.Value is null)
-                {
-                    return OperationResult.Failure(
-                        validatedPath.Error?.Code ?? "security.invalid_entry_path",
-                        validatedPath.Error?.Message ?? $"Unsafe archive entry: {entry.Key}");
-                }
+                var entryKey = entry.Key ?? string.Empty;
 
-                var targetPath = validatedPath.Value;
-                var folder = Path.GetDirectoryName(targetPath);
-                if (!string.IsNullOrWhiteSpace(folder))
+                try
                 {
-                    Directory.CreateDirectory(folder);
-                }
+                    var validatedPath = safetyService.ValidateExtractionTarget(request.DestinationDirectory, entryKey);
+                    if (validatedPath.IsFailure || validatedPath.Value is null)
+                    {
+                        reportEntries.Add(new ExtractionReportEntry(entryKey, false,
+                            validatedPath.Error?.Message ?? $"Unsafe archive entry: {entryKey}"));
+                        continue;
+                    }
 
-                if (File.Exists(targetPath) && !request.OverwriteExisting)
+                    var targetPath = validatedPath.Value;
+                    var folder = Path.GetDirectoryName(targetPath);
+                    if (!string.IsNullOrWhiteSpace(folder))
+                    {
+                        Directory.CreateDirectory(folder);
+                    }
+
+                    if (File.Exists(targetPath) && !request.OverwriteExisting)
+                    {
+                        reportEntries.Add(new ExtractionReportEntry(entryKey, false,
+                            $"Target file already exists: {targetPath}"));
+                        continue;
+                    }
+
+                    using var source = entry.OpenEntryStream();
+                    await using var destination = File.Create(targetPath);
+                    await source.CopyToAsync(destination, cancellationToken).ConfigureAwait(false);
+
+                    reportEntries.Add(new ExtractionReportEntry(entryKey, true, null));
+                }
+                catch (Exception ex)
                 {
-                    return OperationResult.Failure(
-                        "archive.overwrite_blocked",
-                        $"Target file already exists: {targetPath}");
+                    reportEntries.Add(new ExtractionReportEntry(entryKey, false, ex.Message));
                 }
-
-                using var source = entry.OpenEntryStream();
-                await using var destination = File.Create(targetPath);
-                await source.CopyToAsync(destination, cancellationToken).ConfigureAwait(false);
 
                 var elapsed = DateTimeOffset.UtcNow - startedAt;
                 var percent = totalEntries == 0 ? 100 : ((i + 1) / (double)totalEntries) * 100;
                 progress?.Report(new JobProgressUpdate(percent, $"Extracted {entry.Key}", elapsed));
+            }
+
+            var succeeded = reportEntries.Count(static e => e.Succeeded);
+            var failed = reportEntries.Count(static e => !e.Succeeded);
+
+            if (succeeded == 0 && failed > 0)
+            {
+                return OperationResult.Failure("archive.extract_failed",
+                    $"All {failed} entries failed to extract.");
+            }
+
+            if (failed > 0)
+            {
+                return OperationResult.Success();
             }
 
             return OperationResult.Success();
@@ -395,12 +421,23 @@ public sealed class SharpCompressArchiveService(IExtractionSafetyService safetyS
                 return OperationResult<ArchivePreviewResult>.Failure("archive.entry_missing", $"Archive entry not found: {entryPath}");
             }
 
-            await using var memory = new MemoryStream();
+            const int maxPreviewBytes = 524_288;
+            bool truncated = false;
             using var entryStream = entry.OpenEntryStream();
-            await entryStream.CopyToAsync(memory, cancellationToken).ConfigureAwait(false);
+            await using var ms = new MemoryStream();
+            var buffer = new byte[8192];
+            int totalRead = 0;
+            int bytesRead;
+            while ((bytesRead = await entryStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+            {
+                int toWrite = Math.Min(bytesRead, maxPreviewBytes - totalRead);
+                if (toWrite > 0) ms.Write(buffer, 0, toWrite);
+                totalRead += bytesRead;
+                if (totalRead >= maxPreviewBytes) { truncated = true; break; }
+            }
 
             var mime = GuessMime(entryPath);
-            return OperationResult<ArchivePreviewResult>.Success(new ArchivePreviewResult(entryPath, mime, memory.ToArray()));
+            return OperationResult<ArchivePreviewResult>.Success(new ArchivePreviewResult(entryPath, mime, ms.ToArray(), truncated));
         }
         catch (global::System.Security.Cryptography.CryptographicException ex)
         {
@@ -449,6 +486,57 @@ public sealed class SharpCompressArchiveService(IExtractionSafetyService safetyS
         {
             return OperationResult.Failure("archive.integrity_failed", "Archive integrity test failed.", ex);
         }
+    }
+
+    public async Task<OperationResult<IntegrityReport>> TestIntegrityDetailedAsync(
+        ArchiveOpenRequest request, CancellationToken cancellationToken)
+    {
+        if (ArcArchiveService.IsArcPath(request.ArchivePath))
+        {
+            return await ArcArchiveService.TestIntegrityDetailedAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+
+        try
+        {
+            using var stream = File.OpenRead(request.ArchivePath);
+            using var archive = ArchiveFactory.Open(stream, new ReaderOptions { Password = request.Password });
+            var entries = new List<IntegrityReportEntry>();
+            int valid = 0, invalid = 0;
+
+            foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                try
+                {
+                    using var entryStream = entry.OpenEntryStream();
+                    await entryStream.CopyToAsync(Stream.Null, cancellationToken).ConfigureAwait(false);
+                    entries.Add(new IntegrityReportEntry(entry.Key ?? "unknown", true, null));
+                    valid++;
+                }
+                catch (Exception ex)
+                {
+                    entries.Add(new IntegrityReportEntry(entry.Key ?? "unknown", false, ex.Message));
+                    invalid++;
+                }
+            }
+
+            return OperationResult<IntegrityReport>.Success(new IntegrityReport(entries, valid, invalid));
+        }
+        catch (Exception ex)
+        {
+            return OperationResult<IntegrityReport>.Failure("integrity.failed", ex.Message);
+        }
+    }
+
+    public async Task<OperationResult<IntegrityReport>> FastIntegrityScanAsync(
+        ArchiveOpenRequest request, CancellationToken cancellationToken)
+    {
+        if (ArcArchiveService.IsArcPath(request.ArchivePath))
+        {
+            return await ArcArchiveService.FastIntegrityScanAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+
+        return await TestIntegrityDetailedAsync(request, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<OperationResult<ArchiveEditSession>> CreateEditSessionAsync(

@@ -16,6 +16,7 @@
             </StackPanel>
 
             <Grid ColumnDefinitions="*,14,*" RowDefinitions="Auto,14,Auto">
+                <Button Padding="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="Transparent" BorderThickness="0" Tag="open" Click="FeatureCard_Click">
                 <Border Padding="22" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}">
                     <StackPanel Spacing="10">
                         <StackPanel Orientation="Horizontal" Spacing="12">
@@ -26,8 +27,10 @@
                                    Text="Browse and explore archive contents, preview files, extract, and manage entries." />
                     </StackPanel>
                 </Border>
+                </Button>
 
-                <Border Grid.Column="2" Padding="22" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}">
+                <Button Grid.Column="2" Padding="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="Transparent" BorderThickness="0" Tag="create" Click="FeatureCard_Click">
+                <Border Padding="22" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}">
                     <StackPanel Spacing="10">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <TextBlock FontSize="24" Foreground="{DynamicResource VaultArcPrimaryAccentBrush}" Text="📦" />
@@ -37,8 +40,10 @@
                                    Text="Pack files and folders into ZIP, TAR, or encrypted .arc archives." />
                     </StackPanel>
                 </Border>
+                </Button>
 
-                <Border Grid.Row="2" Padding="22" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}">
+                <Button Grid.Row="2" Padding="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="Transparent" BorderThickness="0" Tag="jobs" Click="FeatureCard_Click">
+                <Border Padding="22" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}">
                     <StackPanel Spacing="10">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <TextBlock FontSize="24" Foreground="{DynamicResource VaultArcPrimaryAccentBrush}" Text="⏳" />
@@ -48,8 +53,10 @@
                                    Text="Monitor compress and extract jobs with live progress tracking." />
                     </StackPanel>
                 </Border>
+                </Button>
 
-                <Border Grid.Row="2" Grid.Column="2" Padding="22" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}">
+                <Button Grid.Row="2" Grid.Column="2" Padding="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch" Background="Transparent" BorderThickness="0" Tag="hash" Click="FeatureCard_Click">
+                <Border Padding="22" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}">
                     <StackPanel Spacing="10">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <TextBlock FontSize="24" Foreground="{DynamicResource VaultArcPrimaryAccentBrush}" Text="#️⃣" />
@@ -59,6 +66,7 @@
                                    Text="Compute and compare file checksums with MD5, SHA-256, or SHA-512." />
                     </StackPanel>
                 </Border>
+                </Button>
             </Grid>
 
             <Border Padding="22" CornerRadius="10" Background="{DynamicResource VaultArcSurfaceBrush}"
@@ -70,8 +78,8 @@
                             <DataTemplate x:DataType="x:String">
                                 <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                                         Padding="10,6" Margin="0,1"
-                                        Command="{Binding $parent[UserControl].((vm:HomeViewModel)DataContext).RecentArchives}"
-                                        Tag="{Binding}">
+                                        Tag="{Binding}"
+                                        Click="RecentArchiveBtn_Click">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
                                         <TextBlock FontSize="14" Opacity="0.6" Text="📁" />
                                         <TextBlock FontSize="13" Text="{Binding}" TextTrimming="CharacterEllipsis" />

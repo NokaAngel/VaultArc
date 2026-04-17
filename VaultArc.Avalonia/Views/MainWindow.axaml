@@ -7,9 +7,18 @@
         Icon="avares://VaultArc.Avalonia/Assets/AppIcon.ico"
         Background="{DynamicResource VaultArcBackgroundBrush}">
 
-    <Grid ColumnDefinitions="220,*">
-        <Border Background="{DynamicResource VaultArcSurfaceBrush}" BorderBrush="{DynamicResource VaultArcListAccentBrush}" BorderThickness="0,0,1,0">
-            <DockPanel>
+    <DockPanel>
+        <Border x:Name="UpdateBanner" DockPanel.Dock="Top" Background="#1565C0" IsVisible="False" Padding="12,8">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+                <TextBlock Foreground="White" FontSize="13" VerticalAlignment="Center" x:Name="UpdateText" Text="A new version of VaultArc is available!" />
+                <Button x:Name="UpdateLink" Content="Download" FontSize="12" Padding="12,4" />
+                <Button x:Name="DismissUpdate" Content="✕" FontSize="10" Padding="6,2" Background="Transparent" Foreground="White" />
+            </StackPanel>
+        </Border>
+
+        <Grid ColumnDefinitions="220,*">
+            <Border Background="{DynamicResource VaultArcSurfaceBrush}" BorderBrush="{DynamicResource VaultArcListAccentBrush}" BorderThickness="0,0,1,0">
+                <DockPanel>
                 <StackPanel DockPanel.Dock="Top" Margin="16,20,16,16" Spacing="8">
                     <Image Width="40" Height="40" HorizontalAlignment="Left"
                            Source="avares://VaultArc.Avalonia/Assets/VaultArcLogo.png" />
@@ -64,6 +73,7 @@
             </DockPanel>
         </Border>
 
-        <ContentControl Grid.Column="1" x:Name="ContentArea" />
-    </Grid>
+            <ContentControl Grid.Column="1" x:Name="ContentArea" />
+        </Grid>
+    </DockPanel>
 </Window>
